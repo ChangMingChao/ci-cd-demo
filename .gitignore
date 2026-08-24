@@ -1,0 +1,5 @@
+# 部署目录（Jenkins 自动更新）
+deploy/
+
+# 备份文件
+*.backup
