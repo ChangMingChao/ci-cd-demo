@@ -11,6 +11,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 from jinja2 import Template
 import datetime
 import time
+import random
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="zh-CN">
@@ -25,7 +26,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #d33529 0%, #81261d 100%);
+            background: linear-gradient(135deg, #{{ color1 }} 0%, #{{ color2 }} 100%);
             color: white;
         }
         .card {
@@ -67,12 +68,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 def build():
+    # 随机颜色
+    colors = [
+        ("667eea", "764ba2"), ("f093fb", "f5576c"), ("4facfe", "00f2fe"),
+        ("43e97b", "38f9d7"), ("fa709a", "fee140"), ("a8edea", "feed6c"),
+    ]
+    color1, color2 = random.choice(colors)
+
     version = f"v1.0.{int(time.time()) % 1000}"
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
     template = Template(HTML_TEMPLATE)
-    html = template.render(version=version, timestamp=timestamp)
+    html = template.render(color1=color1, color2=color2, version=version, timestamp=timestamp)
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
