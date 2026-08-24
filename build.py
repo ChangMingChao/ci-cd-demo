@@ -60,7 +60,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="card">
         <div class="icon">🔧</div>
         <h1>欢迎使用 Jenkins</h1>
-        <p class="subtitle">CI/CD 自动构建与部署演示</p>
+        <p class="subtitle">CI/CD 自动构建与部署演示页面</p>
         <div class="version">版本: {{ version }}</div>
         <div class="timestamp">部署时间: {{ timestamp }}</div>
     </div>
