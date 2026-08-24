@@ -90,7 +90,7 @@ pipeline {
                     
                     echo 逐个验证 import...
                     "%VENV_DIR%\\Scripts\\python.exe" -c "import jinja2; print(f'✅ Jinja2 {jinja2.__version__}')"
-                    "%VENV_DIR%\\Scripts\\python.exe" -c "import faker; print(f'✅ Faker {faker.__version__}')"
+                    "%VENV_DIR%\\Scripts\\python.exe" -c "import importlib.metadata; print(f'✅ Faker {importlib.metadata.version(\"faker\")}')"
                     "%VENV_DIR%\\Scripts\\python.exe" -c "import emoji; print(f'✅ Emoji {emoji.__version__}')"
                     
                     echo ---
@@ -185,13 +185,15 @@ pipeline {
                     dir "%DEPLOY_DIR%"
                     
                     if exist "%DEPLOY_DIR%\\index.html.prev" (
-                        fc "%DEPLOY_DIR%\\index.html" "%DEPLOY_DIR%\\index.html.prev" >nul 2>&1
-                        if errorlevel 1 (
-                            echo 🔄 检测到内容变更！新版本已生效
-                        ) else (
-                            echo 内容与之前一致
-                        )
-                    )
+                                            fc "%DEPLOY_DIR%\\index.html" "%DEPLOY_DIR%\\index.html.prev" >nul 2>&1
+                                            if errorlevel 1 (
+                                                echo 🔄 检测到内容变更！新版本已生效
+                                            ) else (
+                                                echo 内容与之前一致
+                                            )
+                                        )
+                                        rem fc 返回非零时 Jenkins 会误判为失败，手动复位
+                                        exit /b 0
                 '''
             }
         }
