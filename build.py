@@ -5,8 +5,9 @@ CI/CD Demo Build Script
 """
 import sys
 import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+# 修复 Windows 控制台编码问题
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 from jinja2 import Template
 from faker import Faker
@@ -15,7 +16,7 @@ import random
 import datetime
 import time
 
-fake = Faker('zh_CN')
+fake = Faker("zh_CN")
 
 # HTML 模板
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -79,12 +80,12 @@ def build():
     ]
     color1, color2 = random.choice(colors)
 
-    # 使用 emoji 包
+    # 使用 emoji 包转换
     emojis = [":rocket:", ":sparkles:", ":fire:", ":gem:", ":zap:", 
               ":star:", ":art:", ":dart:", ":rainbow:", ":party_popper:"]
     random_emoji = emoji.emojize(random.choice(emojis))
 
-    # 使用 Faker 生成随机内容
+    # 使用 Faker 生成中文随机内容
     random_sentence = fake.sentence(nb_words=8)
     quote = fake.sentence(nb_words=12)
     generator = fake.name()
@@ -108,7 +109,7 @@ def build():
         timestamp=timestamp,
     )
 
-    # 写入文件
+    # 写入 index.html
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
