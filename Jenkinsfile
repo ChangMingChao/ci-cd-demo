@@ -198,47 +198,35 @@ pipeline {
             }
         }
         
-        // ===================== 第五阶段：启动服务 =====================
-        stage('启动服务') {
-            steps {
-                bat '''
-                                    echo ===============================================
-                                    echo 🌐 第五阶段：启动 HTTP 服务
-                                    echo ===============================================
+        // ===================== 第五阶段：启动服务（已在运行则跳过） =====================
+                stage('启动服务') {
+                    steps {
+                        bat '''
+                            echo ===============================================
+                            echo 🌐 第五阶段：启动 HTTP 服务
+                            echo ===============================================
                     
-                                    echo 🔍 检查端口 %SERVER_PORT% 是否被占用...
+                            set ALREADY_RUNNING=
+                            for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%SERVER_PORT%.*LISTENING"') do set ALREADY_RUNNING=1
                     
-                                    set PID_TO_KILL=
-                                    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%SERVER_PORT%.*LISTENING"') do (
-                                        set PID_TO_KILL=%%a
-                                    )
+                            if defined ALREADY_RUNNING (
+                                echo ✅ 端口 %SERVER_PORT% 已被占用，服务已在运行，跳过启动
+                                echo 💡 Python http.server 每次请求都会重新读取文件
+                                echo 💡 新部署的文件已生效，刷新浏览器即可看到更新
+                            ) else (
+                                echo 🔨 端口 %SERVER_PORT% 空闲，正在启动服务...
+                                echo   目录: %DEPLOY_DIR%
+                                echo   端口: %SERVER_PORT%
+                                echo   Python: %VENV_DIR%\\Scripts\\python.exe
+                                start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\\Scripts\\python.exe -m http.server %SERVER_PORT%"
+                                echo ✅ 服务已启动！
+                            )
                     
-                                    if defined PID_TO_KILL (
-                                        echo 发现旧进程 PID: %PID_TO_KILL%，正在停止...
-                                        taskkill /PID %PID_TO_KILL% /F >nul 2>&1 || ver >nul
-                                        ping -n 3 127.0.0.1 >nul
-                                        echo ✅ 旧进程已终止
-                                    ) else (
-                                        echo ℹ️ 端口未被占用，无需清理
-                                    )
-                    
-                                    ping -n 2 127.0.0.1 >nul
-                    
-                                    echo ---
-                                    echo 启动 Python HTTP 服务器...
-                                    echo   目录: %DEPLOY_DIR%
-                                    echo   端口: %SERVER_PORT%
-                                    echo   Python: %VENV_DIR%\\Scripts\\python.exe
-                                    echo ---
-                    
-                                    start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\\Scripts\\python.exe -m http.server %SERVER_PORT%"
-                    
-                                    echo ✅ 服务已启动！
-                                    echo 🌐 浏览器访问: http://localhost:%SERVER_PORT%
-                                    exit /b 0
-                                '''
-            }
-        }
+                            echo 🌐 浏览器访问: http://localhost:%SERVER_PORT%
+                            exit /b 0
+                        '''
+                    }
+                }
         
         // ===================== 第六阶段：验证 =====================
         stage('验证') {
