@@ -5,7 +5,7 @@
 ## 演示效果
 
 访问 http://localhost:8000   
-分钟会看到：
+每5分钟会看到：
 - 不同的渐变色背景
 - 不同的 emoji 图标
 - 递增的版本号
@@ -51,7 +51,7 @@ python -m http.server 8000
 ### 3. 启用 GitHub Actions
 
 推送到 GitHub 后，Actions 自动启用：
-- **自动触发**：每分钟整点
+- **自动触发**：每5分钟整点
 - **手动触发**：GitHub → Actions → Auto Update Demo → Run workflow
 
 ## 文件说明
