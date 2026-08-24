@@ -9,6 +9,7 @@ pipeline {
     environment {
         // 本地部署目录
         DEPLOY_DIR = 'F:\\horse_ranch\\ci-cd-demo\\deploy'
+        SERVER_PORT = '8000'
     }
     
     stages {
@@ -55,6 +56,24 @@ pipeline {
             }
         }
         
+        stage('启动服务') {
+            steps {
+                echo '🌐 检查并启动 HTTP 服务器...'
+                bat '''
+                    echo 检查 HTTP 服务器是否已在端口 %SERVER_PORT% 运行...
+                    netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
+                    if errorlevel 1 (
+                        echo 服务未运行，正在启动...
+                        start /B python -m http.server %SERVER_PORT% --directory "%DEPLOY_DIR%"
+                        timeout /t 2 /nobreak >nul
+                        echo 服务已启动在 http://localhost:%SERVER_PORT%
+                    ) else (
+                        echo HTTP 服务器已在运行，跳过启动
+                    )
+                '''
+            }
+        }
+        
         stage('验证部署') {
             steps {
                 echo '🔍 验证部署结果...'
@@ -66,6 +85,16 @@ pipeline {
                     ) else (
                         echo ❌ 部署失败：文件不存在
                         exit /b 1
+                    )
+                    
+                    echo.
+                    echo 检查服务状态...
+                    netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
+                    if errorlevel 1 (
+                        echo ⚠️ 服务可能未正常启动
+                    ) else (
+                        echo ✅ 服务正在运行
+                        echo 🌐 访问地址: http://localhost:%SERVER_PORT%
                     )
                 '''
             }
