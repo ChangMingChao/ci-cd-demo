@@ -7,10 +7,8 @@ pipeline {
     }
     
     environment {
-        // 模拟服务器配置（Docker 容器名）
-        SERVER_HOST = 'jenkins-server'
-        SERVER_USER = 'deploy'
-        DEPLOY_PATH = '/usr/share/nginx/html'
+        // 本地部署目录
+        DEPLOY_DIR = 'F:\\horse_ranch\\ci-cd-demo\\deploy'
     }
     
     stages {
@@ -24,41 +22,35 @@ pipeline {
         stage('构建') {
             steps {
                 echo '🔨 开始构建...'
-                sh 'ls -la'
-                sh 'cat index.html | grep "版本:" || true'
+                bat 'dir'
+                bat 'type index.html | findstr "版本:"'
             }
         }
         
         stage('测试') {
             steps {
                 echo '✅ 运行测试（模拟）'
-                sh 'echo "所有测试通过！"'
+                bat 'echo 所有测试通过！'
             }
         }
         
-        stage('部署到服务器') {
+        stage('部署到本地') {
             steps {
-                echo '🚀 开始部署...'
-                sh '''
-                    # 通过 SSH 连接模拟服务器
-                    ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "
-                        echo '备份旧版本...'
-                        cp -r ${DEPLOY_PATH} ${DEPLOY_PATH}_backup_$(date +%s) || true
-                        
-                        echo '清空旧文件...'
-                        rm -rf ${DEPLOY_PATH}/*
-                    "
+                echo '🚀 开始部署到本地目录...'
+                bat '''
+                    echo 创建部署目录...
+                    if not exist "%DEPLOY_DIR%" mkdir "%DEPLOY_DIR%"
                     
-                    # 通过 SCP 传输新文件
-                    echo '传输新文件...'
-                    scp index.html ${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH}/
+                    echo 备份旧版本...
+                    if exist "%DEPLOY_DIR%\\index.html" (
+                        copy "%DEPLOY_DIR%\\index.html" "%DEPLOY_DIR%\\index.html.backup"
+                    )
                     
-                    # 远程执行重启命令
-                    echo '重启 nginx...'
-                    ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "
-                        nginx -s reload || nginx
-                        echo '部署完成！'
-                    "
+                    echo 复制新文件到部署目录...
+                    copy index.html "%DEPLOY_DIR%\\index.html"
+                    
+                    echo 部署完成！
+                    dir "%DEPLOY_DIR%"
                 '''
             }
         }
@@ -66,17 +58,23 @@ pipeline {
         stage('验证部署') {
             steps {
                 echo '🔍 验证部署结果...'
-                script {
-                    def response = sh(script: "curl -s http://jenkins-server:9090 | grep '版本:' || echo '验证跳过'", returnStdout: true).trim()
-                    echo "服务器响应: ${response}"
-                }
+                bat '''
+                    echo 检查部署文件...
+                    if exist "%DEPLOY_DIR%\\index.html" (
+                        echo ✅ 部署成功！文件已更新
+                        type "%DEPLOY_DIR%\\index.html" | findstr "版本:"
+                    ) else (
+                        echo ❌ 部署失败：文件不存在
+                        exit /b 1
+                    )
+                '''
             }
         }
     }
     
     post {
         success {
-            echo '✅ 部署成功！访问 http://localhost:9090 查看效果'
+            echo '✅ 部署成功！访问 http://localhost:8000 查看效果'
         }
         failure {
             echo '❌ 部署失败，请检查日志'

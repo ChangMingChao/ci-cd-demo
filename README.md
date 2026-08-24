@@ -1,14 +1,10 @@
-# CI/CD 自动部署演示
+# CI/CD 自动部署演示（本地版）
 
-这是一个全自动的 CI/CD 演示项目：
-
-- **GitHub Actions** 每小时自动修改代码（版本号、颜色、emoji）
-- **Jenkins** 每 2 分钟检查一次，发现新提交自动构建部署
-- **模拟服务器**（Docker 容器）接收部署并对外提供服务
+全自动 CI/CD 演示：GitHub Actions 自动更新代码 + Jenkins 自动构建部署到本地。
 
 ## 演示效果
 
-访问 http://localhost:9090，每小时会看到：
+访问 http://localhost:8000，每小时会看到：
 - 不同的渐变色背景
 - 不同的 emoji 图标
 - 递增的版本号
@@ -21,35 +17,58 @@
        ↓
 [Jenkins] → 每 2 分钟轮询，检测到变化自动触发 Pipeline
        ↓
-[模拟服务器] → SSH 部署，nginx 对外服务
+[本地部署] → 复制文件到 F:\horse_ranch\ci-cd-demo\deploy\
        ↓
-[浏览器] → 访问 http://localhost:9090 查看效果
+[本地服务器] → Python http.server 对外服务
+       ↓
+[浏览器] → 访问 http://localhost:8000 查看效果
 ```
+
+## 快速开始
+
+### 1. 启动本地 HTTP 服务器
+
+```powershell
+cd F:\horse_ranch\ci-cd-demo\deploy
+python -m http.server 8000
+```
+
+保持这个窗口开着，浏览器访问 http://localhost:8000
+
+### 2. 配置 Jenkins Pipeline
+
+1. 打开 http://localhost:8080
+2. **新建任务** → 名称 `ci-cd-demo` → 选 **Pipeline**
+3. 配置：
+   - **Pipeline** → 定义：`Pipeline script from SCM`
+   - **SCM**：`Git`
+   - **Repository URL**：你的 GitHub 仓库地址
+   - **Branch Specifier**：`*/master`
+   - **Script Path**：`Jenkinsfile`
+4. 保存后点击 **Build Now**
+
+### 3. 启用 GitHub Actions
+
+推送到 GitHub 后，Actions 自动启用：
+- **自动触发**：每小时整点
+- **手动触发**：GitHub → Actions → Auto Update Demo → Run workflow
 
 ## 文件说明
 
 - `index.html` - 演示页面（被 GitHub Actions 自动修改）
-- `Jenkinsfile` - Jenkins Pipeline 定义
-- `.github/workflows/auto-update.yml` - GitHub Actions 自动更新脚本
+- `Jenkinsfile` - Jenkins Pipeline 定义（本地部署）
+- `deploy/` - 部署目录（Jenkins 自动更新）
+- `.github/workflows/auto-update.yml` - GitHub Actions 脚本
 
-## 本地环境搭建
+## 查看效果
 
 ```powershell
-# 1. 启动模拟服务器（nginx 容器）
-docker run -d --name jenkins-server -p 9090:80 nginx:alpine
+# 打开演示页面
+Start-Process "http://localhost:8000"
 
-# 2. 创建 Jenkins 网络并连接
-docker network create jenkins-net
-docker network connect jenkins-net jenkins-server
-docker network connect jenkins-net jenkins
+# 查看部署目录
+dir F:\horse_ranch\ci-cd-demo\deploy
 
-# 3. 在 Jenkins 创建 Pipeline
-# - 新建任务 → 选"Pipeline"
-# - Pipeline 定义选"Pipeline script from SCM"
-# - 指向这个 GitHub 仓库
-
-# 4. 等待自动部署
-# - GitHub Actions 每小时整点运行
-# - Jenkins 每 2 分钟检查一次
-# - 访问 http://localhost:9090 查看效果
+# 查看 Jenkins 构建历史
+Start-Process "http://localhost:8080/job/ci-cd-demo/"
 ```
