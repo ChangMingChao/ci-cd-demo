@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 CI/CD Demo Build Script
-生成演示页面 — 欢迎使用 Jenkins
+使用 Jinja2 渲染页面，内容固定，版本和时间动态
 """
 import sys
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
+from jinja2 import Template
 import datetime
 import time
 
-HTML = """<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -59,8 +60,8 @@ HTML = """<!DOCTYPE html>
         <div class="icon">🔧</div>
         <h1>欢迎使用 Jenkins</h1>
         <p class="subtitle">CI/CD 自动构建与部署演示</p>
-        <div class="version">版本: {version}</div>
-        <div class="timestamp">部署时间: {timestamp}</div>
+        <div class="version">版本: {{ version }}</div>
+        <div class="timestamp">部署时间: {{ timestamp }}</div>
     </div>
 </body>
 </html>"""
@@ -70,7 +71,8 @@ def build():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    html = HTML.format(version=version, timestamp=timestamp)
+    template = Template(HTML_TEMPLATE)
+    html = template.render(version=version, timestamp=timestamp)
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
