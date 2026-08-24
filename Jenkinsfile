@@ -90,7 +90,7 @@ pipeline {
                     
                     echo 逐个验证 import...
                     "%VENV_DIR%\\Scripts\\python.exe" -c "import jinja2; print(f'✅ Jinja2 {jinja2.__version__}')"
-                    "%VENV_DIR%\\Scripts\\python.exe" -c "import importlib.metadata; print(f'✅ Faker {importlib.metadata.version(\"faker\")}')"
+                    "%VENV_DIR%\\Scripts\\python.exe" -c "import importlib.metadata; print('✅ Faker', importlib.metadata.version('faker'))"
                     "%VENV_DIR%\\Scripts\\python.exe" -c "import emoji; print(f'✅ Emoji {emoji.__version__}')"
                     
                     echo ---
@@ -202,40 +202,41 @@ pipeline {
         stage('启动服务') {
             steps {
                 bat '''
-                    echo ===============================================
-                    echo 🌐 第五阶段：启动 HTTP 服务
-                    echo ===============================================
+                                    echo ===============================================
+                                    echo 🌐 第五阶段：启动 HTTP 服务
+                                    echo ===============================================
                     
-                    echo 🔍 检查端口 %SERVER_PORT% 是否被占用...
+                                    echo 🔍 检查端口 %SERVER_PORT% 是否被占用...
                     
-                    set PID_TO_KILL=
-                    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%SERVER_PORT%.*LISTENING"') do (
-                        set PID_TO_KILL=%%a
-                    )
+                                    set PID_TO_KILL=
+                                    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%SERVER_PORT%.*LISTENING"') do (
+                                        set PID_TO_KILL=%%a
+                                    )
                     
-                    if defined PID_TO_KILL (
-                        echo 发现旧进程 PID: %PID_TO_KILL%，正在停止...
-                        taskkill /PID %PID_TO_KILL% /F >nul 2>&1
-                        timeout /t 2 /nobreak >nul
-                        echo ✅ 旧进程已终止
-                    ) else (
-                        echo ℹ️ 端口未被占用，无需清理
-                    )
+                                    if defined PID_TO_KILL (
+                                        echo 发现旧进程 PID: %PID_TO_KILL%，正在停止...
+                                        taskkill /PID %PID_TO_KILL% /F >nul 2>&1 || ver >nul
+                                        ping -n 3 127.0.0.1 >nul
+                                        echo ✅ 旧进程已终止
+                                    ) else (
+                                        echo ℹ️ 端口未被占用，无需清理
+                                    )
                     
-                    timeout /t 1 /nobreak >nul
+                                    ping -n 2 127.0.0.1 >nul
                     
-                    echo ---
-                    echo 启动 Python HTTP 服务器...
-                    echo   目录: %DEPLOY_DIR%
-                    echo   端口: %SERVER_PORT%
-                    echo   Python: %VENV_DIR%\\Scripts\\python.exe
-                    echo ---
+                                    echo ---
+                                    echo 启动 Python HTTP 服务器...
+                                    echo   目录: %DEPLOY_DIR%
+                                    echo   端口: %SERVER_PORT%
+                                    echo   Python: %VENV_DIR%\\Scripts\\python.exe
+                                    echo ---
                     
-                    start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\\Scripts\\python.exe -m http.server %SERVER_PORT%"
+                                    start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\\Scripts\\python.exe -m http.server %SERVER_PORT%"
                     
-                    echo ✅ 服务已启动！
-                    echo 🌐 浏览器访问: http://localhost:%SERVER_PORT%
-                '''
+                                    echo ✅ 服务已启动！
+                                    echo 🌐 浏览器访问: http://localhost:%SERVER_PORT%
+                                    exit /b 0
+                                '''
             }
         }
         
