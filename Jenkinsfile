@@ -9,7 +9,6 @@ pipeline {
     environment {
         // 本地部署目录
         DEPLOY_DIR = 'F:\\horse_ranch\\ci-cd-demo\\deploy'
-        SERVER_PORT = '8000'
     }
     
     stages {
@@ -56,32 +55,6 @@ pipeline {
             }
         }
         
-        stage('启动服务') {
-            steps {
-                echo '🌐 检查并启动 HTTP 服务器...'
-                bat '''
-                    echo 检查 HTTP 服务器是否已在端口 %SERVER_PORT% 运行...
-                    netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
-                    if errorlevel 1 (
-                        echo 服务未运行，正在启动...
-                        rem 先 cd 到目录，避免 --directory 参数的引号问题
-                        start "CI-CD Demo Server" cmd /k "cd /d %DEPLOY_DIR% && python -m http.server %SERVER_PORT%"
-                        echo 等待服务启动...
-                        ping -n 4 127.0.0.1 >nul
-                        echo 检查服务状态...
-                        netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
-                        if errorlevel 1 (
-                            echo ⚠️ 服务可能未成功启动
-                        ) else (
-                            echo ✅ 服务已成功启动
-                        )
-                    ) else (
-                        echo ✅ HTTP 服务器已在运行，跳过启动
-                    )
-                '''
-            }
-        }
-        
         stage('验证部署') {
             steps {
                 echo '🔍 验证部署结果...'
@@ -90,19 +63,12 @@ pipeline {
                     if exist "%DEPLOY_DIR%\\index.html" (
                         echo ✅ 部署成功！文件已更新
                         type "%DEPLOY_DIR%\\index.html" | findstr "版本:"
+                        echo.
+                        echo 🌐 访问地址: http://localhost:8000
+                        echo 💡 提示: 刷新浏览器即可看到新版本
                     ) else (
                         echo ❌ 部署失败：文件不存在
                         exit /b 1
-                    )
-                    
-                    echo.
-                    echo 检查服务状态...
-                    netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
-                    if errorlevel 1 (
-                        echo ⚠️ 服务未运行
-                    ) else (
-                        echo ✅ 服务正在运行
-                        echo 🌐 访问地址: http://localhost:%SERVER_PORT%
                     )
                 '''
             }
