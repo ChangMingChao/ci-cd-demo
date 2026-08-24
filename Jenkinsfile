@@ -64,11 +64,24 @@ pipeline {
                     netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
                     if errorlevel 1 (
                         echo 服务未运行，正在启动...
-                        start /B python -m http.server %SERVER_PORT% --directory "%DEPLOY_DIR%"
-                        timeout /t 2 /nobreak >nul
-                        echo 服务已启动在 http://localhost:%SERVER_PORT%
+                        echo 启动命令: python -m http.server %SERVER_PORT% --directory "%DEPLOY_DIR%"
+                        
+                        rem 使用 start 启动新窗口，避免阻塞
+                        start "CI-CD Demo Server" cmd /c "python -m http.server %SERVER_PORT% --directory "%DEPLOY_DIR%" && pause"
+                        
+                        echo 等待服务启动...
+                        timeout /t 3 /nobreak >nul
+                        
+                        echo 检查服务状态...
+                        netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
+                        if errorlevel 1 (
+                            echo ⚠️ 服务可能未成功启动，请手动检查
+                            echo 手动启动命令: cd "%DEPLOY_DIR%" ^&^& python -m http.server %SERVER_PORT%
+                        ) else (
+                            echo ✅ 服务已成功启动
+                        )
                     ) else (
-                        echo HTTP 服务器已在运行，跳过启动
+                        echo ✅ HTTP 服务器已在运行，跳过启动
                     )
                 '''
             }
@@ -91,7 +104,8 @@ pipeline {
                     echo 检查服务状态...
                     netstat -ano | findstr ":%SERVER_PORT%" | findstr "LISTENING" >nul
                     if errorlevel 1 (
-                        echo ⚠️ 服务可能未正常启动
+                        echo ⚠️ 服务未运行
+                        echo 请手动启动: cd "%DEPLOY_DIR%" ^&^& python -m http.server %SERVER_PORT%
                     ) else (
                         echo ✅ 服务正在运行
                         echo 🌐 访问地址: http://localhost:%SERVER_PORT%
