@@ -2,8 +2,8 @@ name: Auto Update Demo
 
 on:
   schedule:
-    # 每小时整点运行一次（UTC 时间，北京时间 = UTC+8）
-    - cron: '* * * * *'
+    # 每5分钟运行一次（UTC 时间，北京时间 = UTC+8）
+    - cron: '*/5 * * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
