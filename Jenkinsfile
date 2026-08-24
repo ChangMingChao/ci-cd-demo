@@ -36,52 +36,57 @@ pipeline {
         stage('环境修复') {
             steps {
                 script {
-                    // 2.1 创建 Python 虚拟环境
+                    // 2.1 检查并复用已有虚拟环境，不存在才创建
                     bat '''
                         echo ===============================================
-                        echo 🔧 步骤 1/5：创建 Python 虚拟环境
+                        echo 🔧 步骤 1/5：检查/创建 Python 虚拟环境
                         echo ===============================================
                         
-                        echo 删除旧虚拟环境...
-                        if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
-                        
-                        echo 正在创建新的虚拟环境到 .venv ...
-                        python -m venv %VENV_DIR%
-                        
-                        if not exist "%VENV_DIR%\\\\Scripts\\\\python.exe" (
-                            echo ❌ 虚拟环境创建失败！请确认 Python 已安装。
-                            exit /b 1
+                        if exist "%VENV_DIR%\\\\Scripts\\\\python.exe" (
+                            echo ✅ 发现已有虚拟环境，直接复用（增量修复模式）
+                            echo 📊 当前 Python 版本:
+                            "%VENV_DIR%\\\\Scripts\\\\python.exe" --version
+                            echo ---
+                            echo 📦 当前已安装的包:
+                            "%VENV_DIR%\\\\Scripts\\\\python.exe" -m pip list --format=columns
+                        ) else (
+                            echo 🔨 未找到虚拟环境，首次创建...
+                            python -m venv %VENV_DIR%
+                            
+                            if not exist "%VENV_DIR%\\\\Scripts\\\\python.exe" (
+                                echo ❌ 虚拟环境创建失败！请确认 Python 已安装。
+                                exit /b 1
+                            )
+                            echo ✅ 虚拟环境首次创建成功
+                            "%VENV_DIR%\\\\Scripts\\\\python.exe" --version
                         )
-                        
-                        echo ---
-                        echo ✅ 虚拟环境创建成功
-                        "%VENV_DIR%\\\\Scripts\\\\python.exe" --version
                     '''
                     
-                    // 2.2 升级 pip、setuptools、wheel
+                    // 2.2 升级 pip（增量，不强制重装）
                     bat '''
                         echo ===============================================
-                        echo 🔧 步骤 2/5：升级构建工具
+                        echo 🔧 步骤 2/5：检查并升级 pip 工具链
                         echo ===============================================
                         
-                        rem 升级 pip 和核心构建工具
+                        rem pip install --upgrade 本身是幂等的：已是最新则跳过
                         "%VENV_DIR%\\\\Scripts\\\\python.exe" -m pip install --upgrade pip setuptools wheel
                         
-                        echo ✅ pip/setuptools/wheel 已升级到最新版本
+                        echo ✅ pip 工具链已是最新
                     '''
                     
-                    // 2.3 安装 requirements.txt 中的依赖
+                    // 2.3 安装 requirements.txt 中的依赖（增量：已装的跳过，缺的才补）
                     bat '''
                         echo ===============================================
-                        echo 🔧 步骤 3/5：安装项目依赖
+                        echo 🔧 步骤 3/5：安装/补全项目依赖
                         echo ===============================================
                         
                         echo 正在从 requirements.txt 安装依赖...
+                        echo pip install 是幂等的：已安装的包会跳过，只补全缺失的
                         echo ---
                         "%VENV_DIR%\\\\Scripts\\\\python.exe" -m pip install -r requirements.txt
                         
                         echo ---
-                        echo ✅ 所有依赖安装完成
+                        echo ✅ 依赖安装/补全完成
                     '''
                     
                     // 2.4 验证依赖完整性
