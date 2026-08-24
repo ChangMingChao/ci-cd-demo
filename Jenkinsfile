@@ -38,23 +38,23 @@ pipeline {
                     echo 🔧 步骤 1/5：检查/创建 Python 虚拟环境
                     echo ===============================================
                     
-                    if exist "%VENV_DIR%\Scripts\python.exe" (
+                    if exist "%VENV_DIR%\\Scripts\\python.exe" (
                         echo ✅ 发现已有虚拟环境，直接复用（增量修复模式）
                         echo 📊 当前 Python 版本:
-                        "%VENV_DIR%\Scripts\python.exe" --version
+                        "%VENV_DIR%\\Scripts\\python.exe" --version
                         echo ---
                         echo 📦 当前已安装的包:
-                        "%VENV_DIR%\Scripts\python.exe" -m pip list --format=columns
+                        "%VENV_DIR%\\Scripts\\python.exe" -m pip list --format=columns
                     ) else (
                         echo 🔨 未找到虚拟环境，首次创建...
                         python -m venv %VENV_DIR%
                         
-                        if not exist "%VENV_DIR%\Scripts\python.exe" (
+                        if not exist "%VENV_DIR%\\Scripts\\python.exe" (
                             echo ❌ 虚拟环境创建失败！请确认 Python 已安装。
                             exit /b 1
                         )
                         echo ✅ 虚拟环境首次创建成功
-                        "%VENV_DIR%\Scripts\python.exe" --version
+                        "%VENV_DIR%\\Scripts\\python.exe" --version
                     )
                 '''
                 
@@ -64,7 +64,7 @@ pipeline {
                     echo 🔧 步骤 2/5：检查并升级 pip 工具链
                     echo ===============================================
                     
-                    "%VENV_DIR%\Scripts\python.exe" -m pip install --upgrade pip setuptools wheel
+                    "%VENV_DIR%\\Scripts\\python.exe" -m pip install --upgrade pip setuptools wheel
                     echo ✅ pip 工具链已是最新
                 '''
                 
@@ -77,7 +77,7 @@ pipeline {
                     echo 正在从 requirements.txt 安装依赖...
                     echo pip install 是幂等的：已安装的包会跳过，只补全缺失的
                     echo ---
-                    "%VENV_DIR%\Scripts\python.exe" -m pip install -r requirements.txt
+                    "%VENV_DIR%\\Scripts\\python.exe" -m pip install -r requirements.txt
                     echo ---
                     echo ✅ 依赖安装/补全完成
                 '''
@@ -89,13 +89,13 @@ pipeline {
                     echo ===============================================
                     
                     echo 逐个验证 import...
-                    "%VENV_DIR%\Scripts\python.exe" -c "import jinja2; print(f'✅ Jinja2 {jinja2.__version__}')"
-                    "%VENV_DIR%\Scripts\python.exe" -c "import faker; print(f'✅ Faker {faker.__version__}')"
-                    "%VENV_DIR%\Scripts\python.exe" -c "import emoji; print(f'✅ Emoji {emoji.__version__}')"
+                    "%VENV_DIR%\\Scripts\\python.exe" -c "import jinja2; print(f'✅ Jinja2 {jinja2.__version__}')"
+                    "%VENV_DIR%\\Scripts\\python.exe" -c "import faker; print(f'✅ Faker {faker.__version__}')"
+                    "%VENV_DIR%\\Scripts\\python.exe" -c "import emoji; print(f'✅ Emoji {emoji.__version__}')"
                     
                     echo ---
                     echo 📦 虚拟环境中所有已安装包:
-                    "%VENV_DIR%\Scripts\python.exe" -m pip list
+                    "%VENV_DIR%\\Scripts\\python.exe" -m pip list
                     
                     echo ================================
                     echo ✅ 依赖验证全部通过！
@@ -123,12 +123,12 @@ pipeline {
                     echo 🔨 第三阶段：使用虚拟环境的 Python 进行构建
                     echo ===============================================
                     
-                    echo 🐍 使用的 Python: %VENV_DIR%\Scripts\python.exe
-                    "%VENV_DIR%\Scripts\python.exe" --version
+                    echo 🐍 使用的 Python: %VENV_DIR%\\Scripts\\python.exe
+                    "%VENV_DIR%\\Scripts\\python.exe" --version
                     
                     echo ---
                     echo 📐 执行构建：build.py
-                    "%VENV_DIR%\Scripts\python.exe" build.py
+                    "%VENV_DIR%\\Scripts\\python.exe" build.py
                     
                     if not exist index.html (
                         echo ❌ 构建失败：index.html 未生成
@@ -226,10 +226,10 @@ pipeline {
                     echo 启动 Python HTTP 服务器...
                     echo   目录: %DEPLOY_DIR%
                     echo   端口: %SERVER_PORT%
-                    echo   Python: %VENV_DIR%\Scripts\python.exe
+                    echo   Python: %VENV_DIR%\\Scripts\\python.exe
                     echo ---
                     
-                    start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\Scripts\python.exe -m http.server %SERVER_PORT%"
+                    start "CI-CD Server (Port %SERVER_PORT%)" cmd /k "@echo off & cd /d %DEPLOY_DIR% & %VENV_DIR%\\Scripts\\python.exe -m http.server %SERVER_PORT%"
                     
                     echo ✅ 服务已启动！
                     echo 🌐 浏览器访问: http://localhost:%SERVER_PORT%
@@ -271,10 +271,10 @@ pipeline {
                         echo ✅ HTTP 服务正在监听 %SERVER_PORT% 端口
                     )
                     
-                    if exist "%VENV_DIR%\Scripts\python.exe" (
+                    if exist "%VENV_DIR%\\Scripts\\python.exe" (
                         echo ✅ 虚拟环境存在且可用
                         echo 📊 虚拟环境 Python 版本:
-                        "%VENV_DIR%\Scripts\python.exe" --version
+                        "%VENV_DIR%\\Scripts\\python.exe" --version
                     ) else (
                         echo ⚠️ 虚拟环境似乎丢失，下次构建将重新创建
                     )
